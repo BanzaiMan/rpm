@@ -140,7 +140,7 @@ module NewRelic
       return @mongrel if @mongrel || ! (defined?(::Mongrel) && defined?(::Mongrel::HttpServer)) 
       ObjectSpace.each_object(Mongrel::HttpServer) do |mongrel|
         @mongrel = mongrel
-      end unless defined?(::JRuby) && !JRuby.runtime.is_object_space_enabled
+      end unless defined?(JRUBY_VERSION) && !JRuby.runtime.is_object_space_enabled
       @mongrel
     end
     
@@ -148,7 +148,7 @@ module NewRelic
       return @unicorn if @unicorn || ! (defined?(::Unicorn) && defined?(::Unicorn::HttpServer)) 
       ObjectSpace.each_object(Unicorn::HttpServer) do |unicorn|
         @unicorn = unicorn
-      end unless defined?(::JRuby) && !JRuby.runtime.is_object_space_enabled
+      end unless defined?(JRUBY_VERSION) && !JRuby.runtime.is_object_space_enabled
       @unicorn
     end
 
@@ -196,15 +196,17 @@ module NewRelic
     end
 
     def check_for_torquebox
-      return unless defined?(::JRuby) &&
+      return unless defined?(JRUBY_VERSION) &&
          ( Java::OrgTorqueboxRailsWebDeployers::RailsRackDeployer rescue nil) 
       @dispatcher = :torquebox
     end
 
     def check_for_glassfish
-      return unless defined?(::JRuby) &&
+      return unless defined?(JRUBY_VERSION) &&
          (((com.sun.grizzly.jruby.rack.DefaultRackApplicationFactory rescue nil) &&
          defined?(com::sun::grizzly::jruby::rack::DefaultRackApplicationFactory)) ||
+         ((com.sun.grizzly.jruby.rack.RackApplication rescue nil) && # grizzly-jruby-1.8.30
+         defined?(com::sun::grizzly::jruby::rack::RackApplication)) ||
          ((org.jruby.rack.DefaultRackApplicationFactory rescue nil) &&
          defined?(org::jruby::rack::DefaultRackApplicationFactory)))
       @dispatcher = :glassfish
@@ -240,7 +242,7 @@ module NewRelic
       if @dispatcher_instance_id.nil? && defined?(::Mongrel::Configurator)
         ObjectSpace.each_object(Mongrel::Configurator) do |mongrel|
           @dispatcher_instance_id = mongrel.defaults[:port] && mongrel.defaults[:port].to_s
-        end unless defined?(::JRuby) && !JRuby.runtime.is_object_space_enabled
+        end unless defined?(JRUBY_VERSION) && !JRuby.runtime.is_object_space_enabled
       end
       
       # Still can't find the port.  Let's look at ARGV to fall back
